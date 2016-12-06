@@ -1,7 +1,11 @@
 
-package guis;
+
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.net.CookieStore;
 
 import javax.swing.*;
 
@@ -23,25 +27,26 @@ public class GUIEncrypt
 	private JButton btnEnc;         // The Encrypt button
 	private JButton btnDec;			// The Decrypt button
 	private JButton btnLoad;		// Load file button
-	
+	private File file;
+    private Buffer buffer;
+
 	/**
 	 * Constructor
 	 */
-	public GUIEncrypt()
-	{
+	public GUIEncrypt() {
+        buffer = new Buffer();
 	}
 	
 	/**
 	 * Starts the application
 	 */
-	public void Start()
-	{
+	public void start() {
 		frame = new JFrame();
 		frame.setBounds(0, 0, 893, 421);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(null);
 		frame.setTitle("Simple Encryption");
-		InitializeGUI();					// Fill in components
+		initializeGUI();					// Fill in components
 		frame.setVisible(true);
 		frame.setResizable(false);			// Prevent user from change size
 		frame.setLocationRelativeTo(null);	// Start middle screen
@@ -50,8 +55,7 @@ public class GUIEncrypt
 	/**
 	 * Sets up the GUI with components
 	 */
-	private void InitializeGUI()
-	{
+	private void initializeGUI() {
 		// First, create the static components
 		JLabel lab1 = new JLabel("Plain Text");
 		lab1.setBounds(13, 13, 74, 13);
@@ -77,12 +81,53 @@ public class GUIEncrypt
 		// The buttons
 		btnEnc = new JButton("Encrypt ->");
 		btnEnc.setBounds(374, 102, 106, 23);
+        btnEnc.addActionListener(new ChooseFileListener());
 		frame.add(btnEnc);
 		btnDec = new JButton("<- Decrypt");
 		btnDec.setBounds(374, 141, 106, 23);
 		frame.add(btnDec);
 		btnLoad = new JButton("Load Working Text");
 		btnLoad.setBounds(343, 319, 159, 23);
+        btnLoad.addActionListener(new ChooseFileListener());
 		frame.add(btnLoad);
 	}
+
+	private class ChooseFileListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+           if(e.getSource() == btnLoad){
+			   fileChooser();
+		   }else if(e.getSource() == btnDec){
+
+		   }else if(e.getSource() == btnEnc){
+			   Writer w = new Writer(file, txtSrc, buffer);
+			   Encrypter enc = new Encrypter(buffer);
+			   w.start();
+               enc.start();
+		   }
+        }
+
+		/**
+		 * Method to open JFileChooser and retrieve the file we wish to encrypt.
+		 */
+		private void fileChooser(){
+			int returnVal;
+			JFileChooser fc = new JFileChooser();
+			fc.setCurrentDirectory(new java.io.File("."));
+			fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			returnVal = fc.showOpenDialog(null);
+			if(returnVal == JFileChooser.APPROVE_OPTION){
+				file = fc.getSelectedFile();
+                System.out.println("File chosen: " + file.getName());
+            }
+		}
+
+    }
+
+    public static void main(String[] args) {
+        GUIEncrypt gui = new GUIEncrypt();
+        gui.start();
+    }
+
 }
