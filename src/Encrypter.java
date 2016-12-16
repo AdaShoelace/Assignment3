@@ -7,18 +7,25 @@ public class Encrypter extends Thread{
 
     public Encrypter(Buffer buffer){
         this.buffer = buffer;
+
     }
 
     @Override
     public void run(){
-        String toAdd;
-        for(int i = 0; i < buffer.getWriterSize(); i++){
+        String toAdd = "";
+        while(true){
             toAdd = buffer.fetchFromWriterQueue();
-            toAdd = encrypt(toAdd);
-            buffer.addToReaderQueue(toAdd);
-        }
+            if(toAdd != null){
+                buffer.addToReaderQueue(encrypt(toAdd));
+            }
+            try {
+                //buffer.printReaderQueue(); //Remove when done
+                Thread.sleep(500);
+            }catch (InterruptedException e){
+                e.printStackTrace();
+            }
 
-        buffer.printReaderQueue();
+        }
     }
 
     /**
@@ -27,7 +34,14 @@ public class Encrypter extends Thread{
      * @return the input string in reversed order
      */
     private String encrypt(String toEncrypt) {
-        String result = new StringBuffer(toEncrypt).reverse().toString();
+        //String result = new StringBuffer(toEncrypt).reverse().toString();
+
+        String result = "";
+
+        for(int i = toEncrypt.length() - 1; i >= 0; i--){
+            result += toEncrypt.charAt(i);
+        }
+
         return result;
     }
 

@@ -30,12 +30,14 @@ public class GUIEncrypt
 	private File file;
     private Buffer buffer;
 
+	public boolean doEncrypt;
+
 	/**
 	 * Constructor
 	 */
-	public GUIEncrypt() {
+	/*public GUIEncrypt() {
         buffer = new Buffer();
-	}
+	}*/
 	
 	/**
 	 * Starts the application
@@ -85,6 +87,7 @@ public class GUIEncrypt
 		frame.add(btnEnc);
 		btnDec = new JButton("<- Decrypt");
 		btnDec.setBounds(374, 141, 106, 23);
+		btnDec.addActionListener(new ChooseFileListener());
 		frame.add(btnDec);
 		btnLoad = new JButton("Load Working Text");
 		btnLoad.setBounds(343, 319, 159, 23);
@@ -92,6 +95,9 @@ public class GUIEncrypt
 		frame.add(btnLoad);
 	}
 
+	/**
+	 * ActionListener for decryp, encryp and load
+	 */
 	private class ChooseFileListener implements ActionListener {
 
         @Override
@@ -100,11 +106,35 @@ public class GUIEncrypt
 			   fileChooser();
 		   }else if(e.getSource() == btnDec){
 
-		   }else if(e.getSource() == btnEnc){
-			   Writer w = new Writer(file, txtSrc, buffer);
+
+
+			   buffer = new Buffer();
+			   doEncrypt = false;
+
+			   Writer w = new Writer(txtDst, txtSrc, buffer, doEncrypt);
 			   Encrypter enc = new Encrypter(buffer);
+			   Reader r = new Reader(txtDst, txtSrc, buffer, doEncrypt);
 			   w.start();
-               enc.start();
+			   r.start();
+			   enc.start();
+
+
+
+
+		   }else if(e.getSource() == btnEnc){
+
+			   buffer = new Buffer();
+			   doEncrypt = true;
+
+			   Writer w = new Writer(file, txtSrc, buffer, doEncrypt);
+			   Encrypter enc = new Encrypter(buffer);
+			   Reader r = new Reader(txtDst, txtSrc, buffer, doEncrypt);
+			   w.start();
+			   r.start();
+			   enc.start();
+
+
+
 		   }
         }
 

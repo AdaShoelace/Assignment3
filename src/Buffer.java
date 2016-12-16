@@ -1,6 +1,5 @@
-import java.util.ArrayList;
+import sun.awt.Mutex;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -8,14 +7,18 @@ import java.util.concurrent.Semaphore;
  */
 public class Buffer {
 
-    private Queue<String> writerQueue, readerQueue;
-    private Semaphore writerSem, readerSem;
+    private LinkedList<String> writerQueue, readerQueue;
+    private Semaphore writerSem, readerSem, encSem;
+    private Mutex readMutex, writeMutex;
 
     public Buffer(){
         writerQueue = new LinkedList<String>();
         readerQueue = new LinkedList<String>();
         writerSem = new Semaphore(1);
         readerSem = new Semaphore(1);
+        encSem = new Semaphore(1);
+        readMutex = new Mutex();
+        writeMutex = new Mutex();
     }
 
     /**
@@ -25,6 +28,7 @@ public class Buffer {
     public void addToWriterQueue(String writerQueueInput){
         try {
             writerSem.acquire();
+            writeMutex.lock();
             writerQueue.add(writerQueueInput);
             for(String s : writerQueue){
                 System.out.println(s);
@@ -32,7 +36,8 @@ public class Buffer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }finally {
-            writerSem.release();
+            writeMutex.unlock();
+            encSem.release();
         }
     }
 
@@ -45,11 +50,13 @@ public class Buffer {
         String res = null;
 
         try {
-            writerSem.acquire();
-            res = writerQueue.remove();
+            encSem.acquire();
+            writeMutex.lock();
+            res = writerQueue.poll();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }finally {
+            writeMutex.unlock();
             writerSem.release();
         }
 
@@ -63,17 +70,37 @@ public class Buffer {
      */
     public void addToReaderQueue(String readerQueueInput){
         try {
-            readerSem.acquire();
+            encSem.acquire();
+            readMutex.lock();
             readerQueue.add(readerQueueInput);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }finally {
+            readMutex.unlock();
             readerSem.release();
         }
     }
 
-    public int getWriterSize(){
-        return writerQueue.size();
+    /**
+     * Returns first element of the reader queue
+     * @return toFetch
+     */
+    public String fetchFromReaderQueue(){
+        String toFetch = "";
+
+        try{
+            readerSem.acquire();
+            readMutex.lock();
+            toFetch = readerQueue.poll();
+        } catch(InterruptedException e){
+
+            e.printStackTrace();
+
+        } finally{
+            readMutex.unlock();
+            encSem.release();
+        }
+        return toFetch;
     }
 
     /**
